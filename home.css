@@ -1,27 +1,48 @@
 body {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    margin-top: 50px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 50px;
 }
 #groundCanvas {
-    width: 60%;
-    margin: auto;
-    margin-top: 100px;
+  width: 60%;
+  margin: auto;
+  margin-top: 100px;
 }
 
 .buttons {
-    width: 400px;
-    margin-bottom: -30px;
-    display: flex;
-    justify-content: center;
+  width: 400px;
+  margin-bottom: -30px;
+  display: flex;
+  justify-content: center;
 }
 
 .buttons button {
-    margin: 10px;
-    padding: 0px;
-    width: 75px;
-    height: 35px;
-    border-radius: 20px;
-    cursor: pointer;
+  margin: 10px;
+  padding: 0px;
+  width: 75px;
+  height: 35px;
+  border-radius: 20px;
+  cursor: pointer;
+}
+
+.instructions {
+  margin-bottom: -50px;
+  margin-top: 60px;
+  display: flex;
+  justify-content: space-around;
+  box-sizing: border-box;
+  height: auto;
+  font-family: math;
+  padding: 5px;
+  font-size: 16px;
+}
+
+.instructions > div {
+  margin: 15px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 3px solid dodgerblue;
+  width: 350px;
 }

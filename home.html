@@ -3,7 +3,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <title>Babylon Project</title>
-    <link rel="stylesheet" href="home.css">
+    <link rel="stylesheet" href="home.css" />
     <script src="https://cdn.babylonjs.com/babylon.js"></script>
     <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
     <script src="https://code.jquery.com/pep/0.4.3/pep.js"></script>
@@ -12,17 +12,57 @@
 
   <body>
     <div class="buttons">
-        <button id="draw">Draw</button>
-        <button id="extrude">Extrude</button>
-        <button id="move">Move</button>
-        <button id="edit"> Edit Vertex</button>
+      <button id="draw">Draw</button>
+      <button id="extrude">Extrude</button>
+      <button id="move">Move</button>
+      <button id="edit">Edit Vertex</button>
     </div>
     <div class="instructions">
-
+      <div class="draw-box">
+        <h2>Draw</h2>
+        <ul>
+          <li>Click on Draw.</li>
+          <li>
+            Press left click of mouse to start drawing the shape of 2D on the
+            ground.
+          </li>
+          <li>Press right click to complete.</li>
+        </ul>
+      </div>
+      <div class="extrude-box">
+        <h2>Extrude</h2>
+        <ul>
+          <li>After drawing, click on Extrude.</li>
+          </li>
+        </ul>
+      </div>
+      <div class="move-box">
+        <h2>Move</h2>
+        <ul>
+          <li>After clicking on extrude, click on Move.</li>
+          <li>
+            Press mouse to select the 2D shape. 
+           <li>Drag mouse to move the 2D shape.
+           </li>
+          </li>
+          <li>Leave mouse for 2D image to stay.</li>
+        </ul>
+      </div>
+      <div class="edit-vertex-box">
+        <h2>Edit Vertex</h2>
+        <ul>
+          <li>After clicking on extrude, click on Edit Vertex.</li>
+          <li>
+            Press mouse to select any of the vertexes of the the 2D shape. 
+           <li>Drag mouse to move that 2D shape.
+           </li>
+          </li>
+          <li>Leave mouse for 2D image to stay.</li>
+        </ul>
+      </div>
     </div>
-    <canvas id="groundCanvas" ></canvas>
+    <canvas id="groundCanvas"></canvas>
 
-    <script type="text/javascript" src="home.js">
-    </script>
+    <script type="text/javascript" src="home.js"></script>
   </body>
 </html>
