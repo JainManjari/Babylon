@@ -138,17 +138,6 @@ var createScene = function () {
     }
   }
 
-  //   var onPointerUpDrag = function () {
-  //     if (startingPoint) {
-  //         var material = new BABYLON.StandardMaterial("extrudedMaterial", scene);
-  //         material.emissiveColor = new BABYLON.Color3(0, 128, 128);
-  //         currentMesh.material = material;
-  //         camera.attachControl(canvas, true);
-  //         startingPoint = null;
-  //         return;
-  //     }
-  // }
-
   function updateExtrudeShapeVertex(
     currentMesh,
     originalPosition,
@@ -222,6 +211,11 @@ var createScene = function () {
             const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
             if (groundPickUpInfo) {
               originalPosition = groundPickUpInfo.pickedPoint;
+              if (originalPosition) {
+                setTimeout(function () {
+                    camera.detachControl(canvas);
+                }, 0);
+            }
             }
           }
         } else if (isEditing && extrudeShape.isExtruded) {
@@ -231,6 +225,11 @@ var createScene = function () {
             const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
             if (groundPickUpInfo) {
               originalPosition = groundPickUpInfo.pickedPoint;
+              if (originalPosition) {
+                setTimeout(function () {
+                    camera.detachControl(canvas);
+                }, 0);
+            }
             }
           }
         }
@@ -266,8 +265,9 @@ var createScene = function () {
         }
         break;
       case BABYLON.PointerEventTypes.POINTERUP:
-        if (originalPosition && isMoving) {
+        if (originalPosition) {
           originalPosition = null;
+          camera.attachControl(canvas, true);
         }
         console.log("POINTER UP");
         break;
