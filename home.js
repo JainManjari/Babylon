@@ -11,7 +11,9 @@ drawButton.addEventListener("click", function (e) {
 const canvas = document.getElementById("groundCanvas");
 const engine = new BABYLON.Engine(canvas, true);
 
-const coordinates = [];
+var coordinates = [];
+
+var extrudeShapes = [];
 
 var createScene = function () {
   var scene = new BABYLON.Scene(engine);
@@ -44,16 +46,24 @@ var createScene = function () {
               pointerInfo.pickInfo.pickedMesh.name == "Ground")
           ) {
             coordinates.push(pointerInfo.pickInfo.pickedPoint);
-            const name = "sphere_"+(coordinates.length-1);
+            const sphereUniqueId = "sphere_" + (coordinates.length - 1);
             const sphere = BABYLON.MeshBuilder.CreateSphere(
-              name,
-              { diameter: 0.5, color:BABYLON.Color3.Red()},
+                sphereUniqueId,
+              { diameter: 0.5, color: BABYLON.Color3(1, 1, 1) },
               scene
             );
             sphere.position = pointerInfo.pickInfo.pickedPoint;
-            var material = new BABYLON.StandardMaterial("pointMarkerMaterial", scene);
-    material.emissiveColor = new BABYLON.Color3(1, 1, 1); 
-    sphere.material = material;
+            var material = new BABYLON.StandardMaterial(scene);
+            material.alpha = 1;
+            material.emissiveColor = new BABYLON.Color3(5, 5, 20);
+            sphere.material = material;
+          } else if(pointerInfo.event.inputIndex==4) {
+            coordinates.push(coordinates[0]);
+            var linesUniqueId = extrudeShapes.length + "";
+            var lines = BABYLON.MeshBuilder.CreateLines("lines_"+linesUniqueId, {points: coordinates, updatable: true}, scene);
+            lines.color = new BABYLON.Color3(5, 5, 20);
+            extrudeShapes.push(coordinates);
+            coordinates = [];
           }
           console.log("POINTER DOWN");
           break;
