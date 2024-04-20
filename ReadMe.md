@@ -15,13 +15,16 @@
 ## For Running Move
 1. After clicking on extrude, click on Move.
 2. Press mouse to select the 2D shape.
-3. Drag mouse to move the 2D shape.
+3. Press and drag mouse to move the 2D shape.
 4. Leave mouse for 2D image to stay.
 
 
 ## For Running Edit Vertex
 1. After clicking on extrude, click on Edit vertex.
 2. Press mouse to select any of the vertexes of the the 2D shape.
-3. Drag mouse to move that vertex.
+3. Press and drag mouse to move that vertex.
 4. Leave mouse for 2D image to stay.
 
+
+## Demo
+For demo image, checkout the image uploaded.
