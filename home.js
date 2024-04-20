@@ -138,19 +138,84 @@ var createScene = function () {
     }
   }
 
+  //   var onPointerUpDrag = function () {
+  //     if (startingPoint) {
+  //         var material = new BABYLON.StandardMaterial("extrudedMaterial", scene);
+  //         material.emissiveColor = new BABYLON.Color3(0, 128, 128);
+  //         currentMesh.material = material;
+  //         camera.attachControl(canvas, true);
+  //         startingPoint = null;
+  //         return;
+  //     }
+  // }
+
+  function updateExtrudeShapeVertex(
+    currentMesh,
+    originalPosition,
+    currentPosition
+  ) {
+    var diff = currentPosition.subtract(originalPosition);
+    currentMesh.position.addInPlace(diff);
+
+    var polyMesh = scene.getMeshByID("polygon");
+    var curMeshIdxs = currentMesh.id.split("_");
+    var coordinateToUpdate = Number(curMeshIdxs[1]);
+
+    var positions = polyMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
+    var startIdx = 3 * Number(coordinateToUpdate);
+
+    positions[startIdx] = currentMesh.position.x;
+    positions[startIdx + 1] = currentMesh.position.y;
+    positions[startIdx + 2] = currentMesh.position.z;
+
+    if (startIdx == 0) {
+      var n = positions.length;
+      positions[n - 3] = positions[startIdx];
+      positions[n - 2] = positions[startIdx + 1];
+      positions[n - 1] = positions[startIdx + 2];
+    }
+
+    var newCoordinates = [];
+
+    for (var i = 0; i < positions.length; i += 3) {
+      var x = positions[i];
+      var y = positions[i + 1];
+      var z = positions[i + 2];
+
+      newCoordinates.push(new BABYLON.Vector3(x, y, z));
+    }
+
+    polyMesh.dispose();
+    createPolygon(newCoordinates);
+
+    var extrudedMeshId = "extruded";
+    var extrudedMesh = scene.getMeshByID(extrudedMeshId);
+    extrudedMesh.dispose();
+    extrudedMesh = BABYLON.MeshBuilder.ExtrudePolygon(
+      extrudedMeshId,
+      { shape: newCoordinates, depth: 5, updatable: true },
+      scene
+    );
+    extrudedMesh.position.y = 5;
+    var material = new BABYLON.StandardMaterial("extrudedMaterial", scene);
+    material.emissiveColor = new BABYLON.Color3(0, 128, 128);
+    extrudedMesh.material = material;
+    extrudedMesh.enableEdgesRendering();
+    extrudedMesh.edgesWidth = 6.0;
+    extrudedMesh.edgesColor = new BABYLON.Color4(1, 0, 3, 1);
+  }
+
   let originalPosition = null;
   let currentPosition = null;
   let currentMesh = null;
 
-  
   // handle mouse clicks
   scene.onPointerObservable.add((pointerInfo) => {
     switch (pointerInfo.type) {
       case BABYLON.PointerEventTypes.POINTERDOWN:
         if (isDrawing) {
           drawingMode(pointerInfo);
-        }
-        else if (isMoving && extrudeShape.isExtruded) {
+        } else if (isMoving && extrudeShape.isExtruded) {
           const originalPickedInfo = getPickUpInfoByMeshId("extruded");
           if (originalPickedInfo) {
             currentMesh = originalPickedInfo.pickedMesh;
@@ -159,23 +224,22 @@ var createScene = function () {
               originalPosition = groundPickUpInfo.pickedPoint;
             }
           }
-        }
-        else if (isEditing && extrudeShape.isExtruded) {
-            const originalPickedInfo = getPickUpInfoByMeshStartsWith("sphere_");
-            if (originalPickedInfo) {
-              currentMesh = originalPickedInfo.pickedMesh;
-              const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
-              if (groundPickUpInfo) {
-                originalPosition = groundPickUpInfo.pickedPoint;
-              }
+        } else if (isEditing && extrudeShape.isExtruded) {
+          const originalPickedInfo = getPickUpInfoByMeshStartsWith("sphere_");
+          if (originalPickedInfo) {
+            currentMesh = originalPickedInfo.pickedMesh;
+            const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
+            if (groundPickUpInfo) {
+              originalPosition = groundPickUpInfo.pickedPoint;
             }
           }
+        }
         console.log("POINTER DOWN");
         break;
       case BABYLON.PointerEventTypes.POINTERMOVE:
         if (currentMesh && isMoving) {
           const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
-          if (groundPickUpInfo && isMoving && currentMesh.id=="extruded") {
+          if (groundPickUpInfo && isMoving && currentMesh.id == "extruded") {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapePosition(
               currentMesh,
@@ -184,14 +248,29 @@ var createScene = function () {
             );
             originalPosition = currentPosition;
           }
+        } else if (currentMesh && isEditing) {
+          const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
+          if (
+            groundPickUpInfo &&
+            isEditing &&
+            currentMesh.id.startsWith("sphere_")
+          ) {
+            currentPosition = groundPickUpInfo.pickedPoint;
+            updateExtrudeShapeVertex(
+              currentMesh,
+              originalPosition,
+              currentPosition
+            );
+            originalPosition = currentPosition;
+          }
         }
         break;
-        case BABYLON.PointerEventTypes.POINTERUP:
-            if (originalPosition && isMoving) {
-              originalPosition = null;
-            }
-            console.log("POINTER UP");
-            break;
+      case BABYLON.PointerEventTypes.POINTERUP:
+        if (originalPosition && isMoving) {
+          originalPosition = null;
+        }
+        console.log("POINTER UP");
+        break;
     }
   });
 
