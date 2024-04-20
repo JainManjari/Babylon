@@ -88,6 +88,16 @@ var createScene = function () {
     }
   }
 
+  function getPickUpInfoByMeshStartsWith(meshId) {
+    var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
+      return mesh && mesh.id.startsWith(meshId);
+    });
+    if (pickInfo.hit) {
+      return pickInfo;
+    }
+    return null;
+  }
+
   // pick up extrudedShape
   function getPickUpInfoByMeshId(meshId) {
     var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
@@ -140,7 +150,7 @@ var createScene = function () {
         if (isDrawing) {
           drawingMode(pointerInfo);
         }
-        if (isMoving && extrudeShape.isExtruded) {
+        else if (isMoving && extrudeShape.isExtruded) {
           const originalPickedInfo = getPickUpInfoByMeshId("extruded");
           if (originalPickedInfo) {
             currentMesh = originalPickedInfo.pickedMesh;
@@ -150,12 +160,22 @@ var createScene = function () {
             }
           }
         }
+        else if (isEditing && extrudeShape.isExtruded) {
+            const originalPickedInfo = getPickUpInfoByMeshStartsWith("sphere_");
+            if (originalPickedInfo) {
+              currentMesh = originalPickedInfo.pickedMesh;
+              const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
+              if (groundPickUpInfo) {
+                originalPosition = groundPickUpInfo.pickedPoint;
+              }
+            }
+          }
         console.log("POINTER DOWN");
         break;
       case BABYLON.PointerEventTypes.POINTERMOVE:
-        if (currentMesh) {
+        if (currentMesh && isMoving) {
           const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
-          if (groundPickUpInfo) {
+          if (groundPickUpInfo && isMoving && currentMesh.id=="extruded") {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapePosition(
               currentMesh,
@@ -167,7 +187,7 @@ var createScene = function () {
         }
         break;
         case BABYLON.PointerEventTypes.POINTERUP:
-            if (originalPosition) {
+            if (originalPosition && isMoving) {
               originalPosition = null;
             }
             console.log("POINTER UP");
@@ -201,6 +221,7 @@ function extrude2DShapes() {
 var isDrawing = false;
 var isExtruding = false;
 var isMoving = false;
+var isEditing = false;
 
 const drawButton = document.getElementById("draw");
 drawButton.addEventListener("click", function (e) {
@@ -208,6 +229,7 @@ drawButton.addEventListener("click", function (e) {
   isDrawing = true;
   isExtruding = false;
   isMoving = false;
+  isEditing = false;
 });
 
 const extrudeButton = document.getElementById("extrude");
@@ -216,6 +238,7 @@ extrudeButton.addEventListener("click", function (e) {
   isDrawing = false;
   isExtruding = true;
   isMoving = false;
+  isEditing = false;
   extrude2DShapes();
 });
 
@@ -225,6 +248,16 @@ moveButton.addEventListener("click", function (e) {
   isDrawing = false;
   isExtruding = false;
   isMoving = true;
+  isEditing = false;
+});
+
+const editButton = document.getElementById("edit");
+editButton.addEventListener("click", function (e) {
+  e.preventDefault();
+  isDrawing = false;
+  isExtruding = false;
+  isMoving = false;
+  isEditing = true;
 });
 
 var scene = createScene();
