@@ -25,14 +25,15 @@ var createScene = function () {
   );
 
   function createPolygon(points) {
-    const polygon = new BABYLON.MeshBuilder.CreatePolygon("polygon", {
-      shape: points,
-      sideOrientation: BABYLON.Mesh.CW,
-    });
-    const material = new BABYLON.StandardMaterial("polygonMaterial", scene);
-    material.emissiveColor = new BABYLON.Color3(0, 0, 1);
-    polygon.material = material;
-    return polygon;
+    if (points && points.length > 2) {
+      const polygon = new BABYLON.MeshBuilder.CreatePolygon("polygon", {
+        shape: points,
+        sideOrientation: BABYLON.Mesh.CW,
+      });
+      const material = new BABYLON.StandardMaterial("polygonMaterial", scene);
+      material.emissiveColor = new BABYLON.Color3(0, 0, 1);
+      polygon.material = material;
+    }
   }
 
   function createSpere(pointerInfo) {
@@ -74,7 +75,8 @@ var createScene = function () {
     ) {
       coordinates.push(pointerInfo.pickInfo.pickedPoint);
       createSpere(pointerInfo);
-    } // Right click to close the loop
+    }
+    // Right click -> to close the loop
     else if (pointerInfo.event.inputIndex == 4) {
       coordinates.push(coordinates[0]);
       createPolygon(coordinates);
@@ -86,10 +88,10 @@ var createScene = function () {
     }
   }
 
-  // Move extrudedShape
-  function pickUpExtrudeShape() {
+  // pick up extrudedShape
+  function getPickUpInfoByMeshId(meshId) {
     var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
-      return mesh !== ground && mesh.id == "extruded";
+      return mesh && mesh.id == meshId;
     });
     if (pickInfo.hit) {
       return pickInfo;
@@ -97,23 +99,79 @@ var createScene = function () {
     return null;
   }
 
+  function updateExtrudeShapePosition(
+    currentMesh,
+    originalPosition,
+    currentPosition
+  ) {
+    // capturing the diff btw both positons
+    var diff = currentPosition.subtract(originalPosition);
+
+    // updating extrudedShape with the difference
+    currentMesh.position.addInPlace(diff);
+    // updating polygon with the difference
+    var polyMesh = scene.getMeshByID("polygon");
+    polyMesh.position.addInPlace(diff);
+
+    // updating spheres with the difference
+    var curPointSet = extrudeShape.coordinates;
+    for (var i = 0; i < curPointSet.length; i++) {
+      sphereName = "sphere_" + i;
+      curSphere = scene.getMeshByName(sphereName);
+      if (curSphere != null) {
+        curSphere.position.addInPlace(diff);
+        curPointSet[i] = curSphere.position;
+      } else {
+        console.log("sphere not found: ", sphereName);
+        break;
+      }
+    }
+  }
+
+  let originalPosition = null;
+  let currentPosition = null;
+  let currentMesh = null;
+
+  
   // handle mouse clicks
   scene.onPointerObservable.add((pointerInfo) => {
-    let currentMesh = null;
-    let originalPosition = null;
     switch (pointerInfo.type) {
       case BABYLON.PointerEventTypes.POINTERDOWN:
         if (isDrawing) {
           drawingMode(pointerInfo);
         }
         if (isMoving && extrudeShape.isExtruded) {
-          currentMesh = pickUpExtrudeShape();
-          if (currentMesh) {
-            originalPosition = currentMesh.pickedPoint;
+          const originalPickedInfo = getPickUpInfoByMeshId("extruded");
+          if (originalPickedInfo) {
+            currentMesh = originalPickedInfo.pickedMesh;
+            const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
+            if (groundPickUpInfo) {
+              originalPosition = groundPickUpInfo.pickedPoint;
+            }
           }
         }
         console.log("POINTER DOWN");
         break;
+      case BABYLON.PointerEventTypes.POINTERMOVE:
+        if (currentMesh) {
+          const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
+          if (groundPickUpInfo) {
+            currentPosition = groundPickUpInfo.pickedPoint;
+            updateExtrudeShapePosition(
+              currentMesh,
+              originalPosition,
+              currentPosition
+            );
+            originalPosition = currentPosition;
+          }
+        }
+        break;
+        case BABYLON.PointerEventTypes.POINTERUP:
+            if (originalPosition) {
+              originalPosition = null;
+            }
+            console.log("POINTER UP");
+            break;
     }
   });
 
