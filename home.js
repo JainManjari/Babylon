@@ -1,19 +1,10 @@
-// Buttons
-var drawMode = false;
-
-const drawButton = document.getElementById("draw");
-drawButton.addEventListener("click", function (e) {
-  e.preventDefault();
-  drawMode = true;
-});
-
 // Canvas
 const canvas = document.getElementById("groundCanvas");
 const engine = new BABYLON.Engine(canvas, true);
 
 var coordinates = [];
 
-var extrudeShapes = [];
+var extrudeShape;
 
 var createScene = function () {
   var scene = new BABYLON.Scene(engine);
@@ -35,7 +26,22 @@ var createScene = function () {
 
   // handle mouse clicks
   scene.onPointerObservable.add((pointerInfo) => {
-    if (drawMode) {
+    if (isDrawing) {
+      if (extrudeShape && extrudeShape.isExtruded) {
+        const n = scene.meshes.length;
+        const meshes = scene.meshes;
+        let index = 1;
+        for (let i = 1; i < n; i++) {
+          const mesh = meshes[index];
+          if (mesh && mesh.id !== "Ground") {
+              mesh.dispose();
+              index = 1;
+              
+          }
+        }
+        coordinates = [];
+        extrudeShape = null;
+      }
       switch (pointerInfo.type) {
         case BABYLON.PointerEventTypes.POINTERDOWN:
           // Left click -> to draw a sphere
@@ -48,7 +54,7 @@ var createScene = function () {
             coordinates.push(pointerInfo.pickInfo.pickedPoint);
             const sphereUniqueId = "sphere_" + (coordinates.length - 1);
             const sphere = BABYLON.MeshBuilder.CreateSphere(
-                sphereUniqueId,
+              sphereUniqueId,
               { diameter: 0.5, color: BABYLON.Color3(1, 1, 1) },
               scene
             );
@@ -57,12 +63,19 @@ var createScene = function () {
             material.alpha = 1;
             material.emissiveColor = new BABYLON.Color3(5, 5, 20);
             sphere.material = material;
-          } else if(pointerInfo.event.inputIndex==4) {
+          } // Right click to close the loop
+          else if (pointerInfo.event.inputIndex == 4) {
             coordinates.push(coordinates[0]);
-            var linesUniqueId = extrudeShapes.length + "";
-            var lines = BABYLON.MeshBuilder.CreateLines("lines_"+linesUniqueId, {points: coordinates, updatable: true}, scene);
+            var lines = BABYLON.MeshBuilder.CreateLines(
+              "lines",
+              { points: coordinates, updatable: true },
+              scene
+            );
             lines.color = new BABYLON.Color3(5, 5, 20);
-            extrudeShapes.push(coordinates);
+            extrudeShape = {
+              coordinates: coordinates,
+              isExtruded: false,
+            };
             coordinates = [];
           }
           console.log("POINTER DOWN");
@@ -73,6 +86,44 @@ var createScene = function () {
 
   return scene;
 };
+
+function extrude2DShapes() {
+    if (extrudeShape && !extrudeShape.isExtruded) {
+      var extrudeObjUniqueId = "extruded";
+      const extrusion = BABYLON.MeshBuilder.ExtrudePolygon(
+        extrudeObjUniqueId,
+        { shape: extrudeShape.coordinates, depth: 5, updatable: true },
+        scene
+      );
+      extrusion.position.y = 4;
+      var material = new BABYLON.StandardMaterial("extrudedMaterial", scene);
+      material.emissiveColor = new BABYLON.Color3(0, 128, 128);
+      extrusion.material = material;
+      extrusion.enableEdgesRendering();
+      extrusion.edgesWidth = 6.0;
+      extrusion.edgesColor = new BABYLON.Color4(1, 0, 3, 1);
+      extrudeShape.isExtruded = true;
+    }
+}
+
+// Buttons
+var isDrawing = false;
+var isExtruding = false;
+
+const drawButton = document.getElementById("draw");
+drawButton.addEventListener("click", function (e) {
+  e.preventDefault();
+  isDrawing = true;
+  isExtruding = false;
+});
+
+const extrudeButton = document.getElementById("extrude");
+extrudeButton.addEventListener("click", function (e) {
+  e.preventDefault();
+  isDrawing = false;
+  isExtruding = true;
+  extrude2DShapes();
+});
 
 var scene = createScene();
 
