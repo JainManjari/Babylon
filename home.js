@@ -143,26 +143,26 @@ var createScene = function () {
     originalPosition,
     currentPosition
   ) {
+    var polyMesh = scene.getMeshByID("polygon");
+
+    if (!polyMesh) {
+      return;
+    }
+
     var diff = currentPosition.subtract(originalPosition);
     currentMesh.position.addInPlace(diff);
 
-    var polyMesh = scene.getMeshByID("polygon");
-    var curMeshIdxs = currentMesh.id.split("_");
+    var curMeshIdxs = currentMesh.id.split("_");//pointmaker0_0
     var coordinateToUpdate = Number(curMeshIdxs[1]);
 
     var positions = polyMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
     var startIdx = 3 * Number(coordinateToUpdate);
 
+    console.log("positions len "+positions.length+" "+positions+" coordinateToUpdate "+coordinateToUpdate+" startIdx "+startIdx);
+
     positions[startIdx] = currentMesh.position.x;
     positions[startIdx + 1] = currentMesh.position.y;
     positions[startIdx + 2] = currentMesh.position.z;
-
-    if (startIdx == 0) {
-      var n = positions.length;
-      positions[n - 3] = positions[startIdx];
-      positions[n - 2] = positions[startIdx + 1];
-      positions[n - 1] = positions[startIdx + 2];
-    }
 
     var newCoordinates = [];
 
@@ -213,9 +213,9 @@ var createScene = function () {
               originalPosition = groundPickUpInfo.pickedPoint;
               if (originalPosition) {
                 setTimeout(function () {
-                    camera.detachControl(canvas);
+                  camera.detachControl(canvas);
                 }, 0);
-            }
+              }
             }
           }
         } else if (isEditing && extrudeShape.isExtruded) {
@@ -227,18 +227,22 @@ var createScene = function () {
               originalPosition = groundPickUpInfo.pickedPoint;
               if (originalPosition) {
                 setTimeout(function () {
-                    camera.detachControl(canvas);
+                  camera.detachControl(canvas);
                 }, 0);
-            }
+              }
             }
           }
         }
-        console.log("POINTER DOWN");
         break;
       case BABYLON.PointerEventTypes.POINTERMOVE:
         if (currentMesh && isMoving) {
           const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
-          if (groundPickUpInfo && isMoving && currentMesh.id == "extruded") {
+          if (
+            groundPickUpInfo &&
+            isMoving &&
+            currentMesh.id == "extruded" &&
+            originalPosition && extrudeShape.isExtruded
+          ) {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapePosition(
               currentMesh,
@@ -252,7 +256,8 @@ var createScene = function () {
           if (
             groundPickUpInfo &&
             isEditing &&
-            currentMesh.id.startsWith("sphere_")
+            currentMesh.id.startsWith("sphere_") &&
+            originalPosition && extrudeShape.isExtruded
           ) {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapeVertex(
@@ -269,7 +274,6 @@ var createScene = function () {
           originalPosition = null;
           camera.attachControl(canvas, true);
         }
-        console.log("POINTER UP");
         break;
     }
   });
