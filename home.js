@@ -88,6 +88,55 @@ var createScene = function () {
     }
   }
 
+  function isVertex() {
+    let isVertex = false;
+    // creating a picking ray from the scene
+    let createPickingRay = scene.createPickingRay(
+      scene.pointerX,
+      scene.pointerY,
+      BABYLON.Matrix.Identity(),
+      camera
+    );
+    let pickingInfo = scene.pickWithRay(createPickingRay);
+
+    // forming perpendicular line to ground in the -ve y axis
+    let pickedPoint = pickingInfo.pickedPoint;
+    let ive_y_direction = new BABYLON.Vector3(0, -1, 0);
+    // extrudedMesh.position.y = 5; same as extruded.position.y
+    let depth = 5;
+
+    let perpendicularRay = new BABYLON.Ray(pickedPoint, ive_y_direction, depth);
+
+    let points = scene.multiPickWithRay(perpendicularRay);
+    if (points) {
+      for (let i = 0; i < points.length; i++) {
+        if (points[i].pickedMesh.name.startsWith("sphere_")) {
+          isVertex = true;
+          currentLowerMeshConnectedToUpperMesh = points[i].pickedMesh;
+          break;
+        }
+      }
+    }
+    return isVertex;
+  }
+
+  function getMeshByPickingRay() {
+    var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
+      return (
+        mesh &&
+        (mesh.id.startsWith("sphere_") || (mesh.id == "extruded" && isVertex()))
+      );
+    });
+    if (pickInfo.hit && pickInfo.pickedMesh) {
+      currentMesh = pickInfo.pickedMesh;
+      if (pickInfo.pickedMesh.id == "extruded") {
+        currentMesh = currentLowerMeshConnectedToUpperMesh;
+      }
+      return currentMesh;
+    }
+    return null;
+  }
+
   function getPickUpInfoByMeshStartsWith(meshId) {
     var pickInfo = scene.pick(scene.pointerX, scene.pointerY, function (mesh) {
       return mesh && mesh.id.startsWith(meshId);
@@ -126,14 +175,11 @@ var createScene = function () {
     // updating spheres with the difference
     var curPointSet = extrudeShape.coordinates;
     for (var i = 0; i < curPointSet.length; i++) {
-      sphereName = "sphere_" + i;
-      curSphere = scene.getMeshByName(sphereName);
+      let sphereName = "sphere_" + i;
+      let curSphere = scene.getMeshByName(sphereName);
       if (curSphere != null) {
         curSphere.position.addInPlace(diff);
         curPointSet[i] = curSphere.position;
-      } else {
-        console.log("sphere not found: ", sphereName);
-        break;
       }
     }
   }
@@ -152,17 +198,24 @@ var createScene = function () {
     var diff = currentPosition.subtract(originalPosition);
     currentMesh.position.addInPlace(diff);
 
-    var curMeshIdxs = currentMesh.id.split("_");//pointmaker0_0
+    var curMeshIdxs = currentMesh.id.split("_");
     var coordinateToUpdate = Number(curMeshIdxs[1]);
 
     var positions = polyMesh.getVerticesData(BABYLON.VertexBuffer.PositionKind);
-    var startIdx = 3 * Number(coordinateToUpdate);
+    var startIndex = 3 * Number(coordinateToUpdate);
 
-    console.log("positions len "+positions.length+" "+positions+" coordinateToUpdate "+coordinateToUpdate+" startIdx "+startIdx);
+    console.log(
+      "coordinat2update " +
+        coordinateToUpdate +
+        " startIndex " +
+        startIndex +
+        " len " +
+        positions.length
+    );
 
-    positions[startIdx] = currentMesh.position.x;
-    positions[startIdx + 1] = currentMesh.position.y;
-    positions[startIdx + 2] = currentMesh.position.z;
+    positions[startIndex] = currentMesh.position.x;
+    positions[startIndex + 1] = currentMesh.position.y;
+    positions[startIndex + 2] = currentMesh.position.z;
 
     var newCoordinates = [];
 
@@ -185,7 +238,7 @@ var createScene = function () {
       { shape: newCoordinates, depth: 5, updatable: true },
       scene
     );
-    extrudedMesh.position.y = 5;
+    extrudedMesh.position.y = 4;
     var material = new BABYLON.StandardMaterial("extrudedMaterial", scene);
     material.emissiveColor = new BABYLON.Color3(0, 128, 128);
     extrudedMesh.material = material;
@@ -196,6 +249,7 @@ var createScene = function () {
 
   let originalPosition = null;
   let currentPosition = null;
+  let currentLowerMeshConnectedToUpperMesh = null;
   let currentMesh = null;
 
   // handle mouse clicks
@@ -219,9 +273,8 @@ var createScene = function () {
             }
           }
         } else if (isEditing && extrudeShape.isExtruded) {
-          const originalPickedInfo = getPickUpInfoByMeshStartsWith("sphere_");
-          if (originalPickedInfo) {
-            currentMesh = originalPickedInfo.pickedMesh;
+          currentMesh = getMeshByPickingRay();
+          if (currentMesh) {
             const groundPickUpInfo = getPickUpInfoByMeshId("Ground");
             if (groundPickUpInfo) {
               originalPosition = groundPickUpInfo.pickedPoint;
@@ -241,7 +294,8 @@ var createScene = function () {
             groundPickUpInfo &&
             isMoving &&
             currentMesh.id == "extruded" &&
-            originalPosition && extrudeShape.isExtruded
+            originalPosition &&
+            extrudeShape.isExtruded
           ) {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapePosition(
@@ -256,8 +310,10 @@ var createScene = function () {
           if (
             groundPickUpInfo &&
             isEditing &&
-            currentMesh.id.startsWith("sphere_") &&
-            originalPosition && extrudeShape.isExtruded
+            (currentMesh.id.startsWith("sphere_") ||
+              currentMesh.id == "extruded") &&
+            originalPosition &&
+            extrudeShape.isExtruded
           ) {
             currentPosition = groundPickUpInfo.pickedPoint;
             updateExtrudeShapeVertex(
