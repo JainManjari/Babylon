@@ -174,6 +174,7 @@ var createScene = function () {
 
     // updating spheres with the difference
     var curPointSet = extrudeShape.coordinates;
+    console.log("extrude "+extrudeShape.coordinates);
     for (var i = 0; i < curPointSet.length; i++) {
       let sphereName = "sphere_" + i;
       let curSphere = scene.getMeshByName(sphereName);
@@ -182,6 +183,10 @@ var createScene = function () {
         curPointSet[i] = curSphere.position;
       }
     }
+    let n = curPointSet.length;
+    curPointSet[n-1] = curPointSet[0];
+    console.log("extrude final "+extrudeShape.coordinates);
+    console.log("curPointSet final "+curPointSet);
   }
 
   function updateExtrudeShapeVertex(
