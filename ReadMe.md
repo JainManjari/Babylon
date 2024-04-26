@@ -29,3 +29,10 @@
 ## Demo
 For demo image, checkout the image uploaded.
 <img width="1666" alt="Screenshot 2024-04-20 at 8 16 17 PM" src="https://github.com/JainManjari/Babylon/assets/54873596/a9cba89a-885e-4518-a0cd-75fff830ff27">
+
+
+## Edit Vertex
+
+https://github.com/JainManjari/Babylon/assets/54873596/ad8b553f-e2b0-43b3-b71e-7e5e5565be78
+
+
