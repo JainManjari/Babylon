@@ -33,6 +33,6 @@ For demo image, checkout the image uploaded.
 
 ## Edit Vertex
 
-https://github.com/JainManjari/Babylon/assets/54873596/ad8b553f-e2b0-43b3-b71e-7e5e5565be78
+<video src="https://github.com/JainManjari/Babylon/assets/54873596/ad8b553f-e2b0-43b3-b71e-7e5e5565be78" alt="edit-vertex-demo">
 
 
